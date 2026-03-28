@@ -1,0 +1,9 @@
+name = "oa-telemetry"
+main = "src/index.ts"
+compatibility_date = "2025-03-01"
+
+[vars]
+OA_TELEMETRY_ENDPOINT = "https://api.openattribution.org/api/v1/telemetry/edge/events"
+
+# OA_API_KEY is a secret - set via:
+#   npx wrangler secret put OA_API_KEY
