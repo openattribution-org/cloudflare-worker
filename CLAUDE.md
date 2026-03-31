@@ -14,10 +14,11 @@ TypeScript, Cloudflare Workers, wrangler v4.
 
 ## How it works
 
-Single-file worker (`src/index.ts`). Intercepts every request, passes it to origin immediately, then classifies the request in the background:
+Single-file worker (`src/index.ts`). Skips static resources, passes the request to origin immediately, then classifies in the background using three tiers:
 
-1. **Bot Management** (Enterprise plans) - uses Cloudflare's `botManagement` signals (score, verified bot status, JA4 fingerprint)
-2. **User-agent fallback** (Free/Pro plans) - matches against known AI bot UA patterns
+1. **verifiedBotCategory** (all plans) - Cloudflare's verified bot classification
+2. **Bot Management score** (Enterprise) - filters non-AI bots and likely humans, low-score unverified fall through to UA
+3. **User-agent matching** (fallback) - ~40 known AI bot UA patterns
 
 If classified as an AI bot, fires a `content_retrieved` event to the OA telemetry endpoint via `ctx.waitUntil`. Telemetry failures are silently swallowed - never surfaces errors to the publisher's visitors.
 
