@@ -28,7 +28,7 @@ Bot categories: `training`, `inference`, `search`.
 
 - `wrangler.toml` - routes, zone ID, `OA_TELEMETRY_ENDPOINT` env var
 - `wrangler.example.toml` - template without zone-specific config
-- `OA_API_KEY` - set via `npx wrangler secret put OA_API_KEY` (never in toml)
+- `OA_API_KEY` - set via `npx wrangler secret put OA_API_KEY` (never in toml). A content-owner key (`oat_pub_...`) with `telemetry:write` scope for the publisher's verified domain - the worker reports events about that site, so it does not use a platform (`oat_pk_...`) key.
 
 ## Conventions
 

@@ -85,6 +85,7 @@ export default {
 			const contentLength = response.headers.get('content-length');
 
 			const event = {
+				id: crypto.randomUUID(),
 				type: 'content_retrieved',
 				timestamp: new Date().toISOString(),
 				content_url: request.url,

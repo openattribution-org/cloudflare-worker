@@ -14,9 +14,13 @@ Works on all Cloudflare plans. Detection uses three tiers:
 npm install
 cp wrangler.example.toml wrangler.toml
 # Edit wrangler.toml: add your zone ID and routes
-npx wrangler secret put OA_API_KEY
+npx wrangler secret put OA_API_KEY   # your oat_pub_ key, telemetry:write scope
 npm run dev
 ```
+
+The worker reports events about your own site, so it uses a content-owner key
+(`oat_pub_...`) issued with `telemetry:write` scope for your verified domain - not
+a platform (`oat_pk_...`) key.
 
 ## Deployment
 
@@ -29,7 +33,7 @@ npm run deploy
 | Variable | Where | Description |
 |----------|-------|-------------|
 | `OA_TELEMETRY_ENDPOINT` | `wrangler.toml` `[vars]` | OA API endpoint (default provided) |
-| `OA_API_KEY` | wrangler secret | Your OA API key |
+| `OA_API_KEY` | wrangler secret | Content-owner key (`oat_pub_...`) with `telemetry:write` scope for your domain |
 | `routes` | `wrangler.toml` | Which domains/paths the worker runs on |
 
 ## What data is sent

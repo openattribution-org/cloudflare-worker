@@ -7,3 +7,5 @@ OA_TELEMETRY_ENDPOINT = "https://telemetry.openattribution.org/events"
 
 # OA_API_KEY is a secret - set via:
 #   npx wrangler secret put OA_API_KEY
+# Use your content-owner key (oat_pub_...) issued with telemetry:write scope
+# for this domain - not a platform (oat_pk_...) key.
