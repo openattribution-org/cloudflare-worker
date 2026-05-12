@@ -28,6 +28,22 @@ a platform (`oat_pk_...`) key.
 npm run deploy
 ```
 
+## No terminal? Paste it into the dashboard
+
+[`worker.js`](worker.js) is a single self-contained file (the same logic as
+`src/index.ts`, in plain JavaScript). If you don't want to use `wrangler`:
+
+1. Cloudflare dashboard → **Workers & Pages** → **Create application** → **Create Worker** → **Deploy** the placeholder, then **Edit code** and paste `worker.js`.
+2. The Worker's **Settings → Variables and Secrets**: add `OA_TELEMETRY_ENDPOINT` (text, `https://telemetry.openattribution.org/events`) and `OA_API_KEY` (secret, your `oat_pub_` key).
+3. The Worker's **Settings → Domains & Routes**: add `yoursite.com/*` and `*.yoursite.com/*`.
+
+There's a full click-by-click walkthrough - including putting a free Cloudflare
+account in front of a Squarespace/Wix/Webflow site - at
+<https://openattribution.org/docs/integrations/hosted-sites>.
+
+`src/index.ts` (TypeScript, wrangler) and `worker.js` (plain JS, paste) are kept
+in sync; change both together.
+
 ## Configuration
 
 | Variable | Where | Description |

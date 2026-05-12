@@ -12,9 +12,14 @@ TypeScript, Cloudflare Workers, wrangler v4.
 - `npm run deploy` - deploy to Cloudflare
 - `npm run typecheck` - strict TypeScript check (`tsc --noEmit`)
 
+## Files
+
+- `src/index.ts` - the worker, TypeScript, deployed via `wrangler` (this is `main` in `wrangler.toml`).
+- `worker.js` - the same logic in plain JavaScript, single self-contained file, for pasting into the Cloudflare dashboard editor (no build step). **Keep it in sync with `src/index.ts` - change both together.** The hosted-sites docs guide (`openattribution.org/docs/integrations/hosted-sites`) embeds a copy of `worker.js`.
+
 ## How it works
 
-Single-file worker (`src/index.ts`). Skips static resources, passes the request to origin immediately, then classifies in the background using three tiers:
+Skips static resources, passes the request to origin immediately, then classifies in the background using three tiers:
 
 1. **verifiedBotCategory** (all plans) - Cloudflare's verified bot classification
 2. **Bot Management score** (Enterprise) - filters non-AI bots and likely humans, low-score unverified fall through to UA
