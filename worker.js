@@ -21,47 +21,47 @@
 
 const AI_BOT_PATTERNS = [
 	// Training crawlers
-	[/GPTBot/i, 'training'],
-	[/ClaudeBot/i, 'training'],
-	[/CCBot/i, 'training'],
-	[/GoogleOther/i, 'training'],
-	[/Bytespider/i, 'training'],
-	[/Diffbot/i, 'training'],
-	[/Applebot-Extended/i, 'training'],
-	[/cohere-ai/i, 'training'],
-	[/FacebookBot/i, 'training'],
-	[/meta-externalagent/i, 'training'],
-	[/Amazonbot/i, 'training'],
-	[/DeepSeekBot/i, 'training'],
-	[/AI2Bot/i, 'training'],
-	[/PanguBot/i, 'training'],
-	[/ChatGLM-Spider/i, 'training'],
-	[/Timpibot/i, 'training'],
-	[/omgili/i, 'training'],
-	[/ImagesiftBot/i, 'training'],
-	[/FirecrawlAgent/i, 'training'],
+	[/GPTBot/i, 'GPTBot', 'training'],
+	[/ClaudeBot/i, 'ClaudeBot', 'training'],
+	[/CCBot/i, 'CCBot', 'training'],
+	[/GoogleOther/i, 'GoogleOther', 'training'],
+	[/Bytespider/i, 'Bytespider', 'training'],
+	[/Diffbot/i, 'Diffbot', 'training'],
+	[/Applebot-Extended/i, 'Applebot-Extended', 'training'],
+	[/cohere-ai/i, 'cohere-ai', 'training'],
+	[/FacebookBot/i, 'FacebookBot', 'training'],
+	[/meta-externalagent/i, 'meta-externalagent', 'training'],
+	[/Amazonbot/i, 'Amazonbot', 'training'],
+	[/DeepSeekBot/i, 'DeepSeekBot', 'training'],
+	[/AI2Bot/i, 'AI2Bot', 'training'],
+	[/PanguBot/i, 'PanguBot', 'training'],
+	[/ChatGLM-Spider/i, 'ChatGLM-Spider', 'training'],
+	[/Timpibot/i, 'Timpibot', 'training'],
+	[/omgili/i, 'omgili', 'training'],
+	[/ImagesiftBot/i, 'ImagesiftBot', 'training'],
+	[/FirecrawlAgent/i, 'FirecrawlAgent', 'training'],
 	// Inference fetchers (user-triggered, real time)
-	[/ChatGPT-User/i, 'inference'],
-	[/Claude-User/i, 'inference'],
-	[/Perplexity-User/i, 'inference'],
-	[/MistralAI-User/i, 'inference'],
-	[/Amzn-User/i, 'inference'],
-	[/meta-externalfetcher/i, 'inference'],
-	[/Google-Agent/i, 'inference'],
-	[/Gemini-Deep-Research/i, 'inference'],
-	[/Google-NotebookLM/i, 'inference'],
-	[/DuckAssistBot/i, 'inference'],
-	[/PhindBot/i, 'inference'],
+	[/ChatGPT-User/i, 'ChatGPT-User', 'inference'],
+	[/Claude-User/i, 'Claude-User', 'inference'],
+	[/Perplexity-User/i, 'Perplexity-User', 'inference'],
+	[/MistralAI-User/i, 'MistralAI-User', 'inference'],
+	[/Amzn-User/i, 'Amzn-User', 'inference'],
+	[/meta-externalfetcher/i, 'meta-externalfetcher', 'inference'],
+	[/Google-Agent/i, 'Google-Agent', 'inference'],
+	[/Gemini-Deep-Research/i, 'Gemini-Deep-Research', 'inference'],
+	[/Google-NotebookLM/i, 'Google-NotebookLM', 'inference'],
+	[/DuckAssistBot/i, 'DuckAssistBot', 'inference'],
+	[/PhindBot/i, 'PhindBot', 'inference'],
 	// AI search indexers
-	[/OAI-SearchBot/i, 'search'],
-	[/Claude-SearchBot/i, 'search'],
-	[/PerplexityBot/i, 'search'],
-	[/YouBot/i, 'search'],
-	[/PetalBot/i, 'search'],
-	[/Bravebot/i, 'search'],
-	[/AzureAI-SearchBot/i, 'search'],
-	[/meta-webindexer/i, 'search'],
-	[/ExaBot/i, 'search'],
+	[/OAI-SearchBot/i, 'OAI-SearchBot', 'search'],
+	[/Claude-SearchBot/i, 'Claude-SearchBot', 'search'],
+	[/PerplexityBot/i, 'PerplexityBot', 'search'],
+	[/YouBot/i, 'YouBot', 'search'],
+	[/PetalBot/i, 'PetalBot', 'search'],
+	[/Bravebot/i, 'Bravebot', 'search'],
+	[/AzureAI-SearchBot/i, 'AzureAI-SearchBot', 'search'],
+	[/meta-webindexer/i, 'meta-webindexer', 'search'],
+	[/ExaBot/i, 'ExaBot', 'search'],
 ];
 
 // Cloudflare's verifiedBotCategory -> OA bot_category. Available on every plan.
@@ -73,15 +73,25 @@ const CF_CATEGORY = {
 
 const STATIC_EXT = /\.(css|js|jpg|jpeg|png|gif|svg|ico|woff2?|ttf|eot|map|webp|avif|mp4|webm)$/i;
 
+function matchUserAgent(ua) {
+	for (const [pattern, name, category] of AI_BOT_PATTERNS) {
+		if (pattern.test(ua)) return { name, category };
+	}
+	return null;
+}
+
 function classify(request) {
 	const cf = request.cf || {};
 	const bm = cf.botManagement;
+	const uaMatch = matchUserAgent(request.headers.get('user-agent') || '');
 
 	// verifiedBotCategory is available on all plans. If Cloudflare has
-	// categorised this as an AI bot, trust it.
+	// categorised this as an AI bot, trust it for the category, but still pull
+	// the bot name from the UA when we recognise it.
 	const aiCategory = CF_CATEGORY[cf.verifiedBotCategory];
 	if (aiCategory) {
 		return {
+			name: uaMatch ? uaMatch.name : null,
 			category: aiCategory,
 			verified: bm && typeof bm.verifiedBot === 'boolean' ? bm.verifiedBot : true,
 			detection: 'bot_management',
@@ -96,16 +106,14 @@ function classify(request) {
 	}
 
 	// UA pattern matching - Free/Pro fallback, or low-score unverified on Enterprise.
-	const ua = request.headers.get('user-agent') || '';
-	for (const [pattern, category] of AI_BOT_PATTERNS) {
-		if (pattern.test(ua)) {
-			return {
-				category,
-				verified: false,
-				detection: bm ? 'bot_management' : 'user_agent',
-				ja4: bm && bm.ja4,
-			};
-		}
+	if (uaMatch) {
+		return {
+			name: uaMatch.name,
+			category: uaMatch.category,
+			verified: false,
+			detection: bm ? 'bot_management' : 'user_agent',
+			ja4: bm && bm.ja4,
+		};
 	}
 
 	return null;
@@ -135,6 +143,7 @@ export default {
 				oa_telemetry_id: request.headers.get('OA-Telemetry-ID') || undefined,
 				data: {
 					user_agent: request.headers.get('user-agent'),
+					...(hit.name ? { bot_name: hit.name } : {}),
 					bot_category: hit.category,
 					verified: hit.verified,
 					detection: hit.detection,
