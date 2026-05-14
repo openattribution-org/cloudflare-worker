@@ -34,19 +34,29 @@ const AI_BOT_PATTERNS: Array<{ pattern: RegExp; name: string; category: BotCateg
 	{ pattern: /omgili/i, name: 'omgili', category: 'training' },
 	{ pattern: /ImagesiftBot/i, name: 'ImagesiftBot', category: 'training' },
 	{ pattern: /FirecrawlAgent/i, name: 'FirecrawlAgent', category: 'training' },
+	{ pattern: /xAI-Bot/i, name: 'xAI-Bot', category: 'training' },
+	{ pattern: /Google-CloudVertexBot/i, name: 'Google-CloudVertexBot', category: 'training' },
+	{ pattern: /HuggingFace-Bot/i, name: 'HuggingFace-Bot', category: 'training' },
+	{ pattern: /Brightbot/i, name: 'Brightbot', category: 'training' },
+	{ pattern: /Webzio-Extended/i, name: 'Webzio-Extended', category: 'training' },
+	{ pattern: /TerraCotta/i, name: 'TerraCotta', category: 'training' },
 
 	// Inference fetchers (user-triggered, real-time)
 	{ pattern: /ChatGPT-User/i, name: 'ChatGPT-User', category: 'inference' },
+	{ pattern: /ChatGPT-Browser/i, name: 'ChatGPT-Browser', category: 'inference' },
 	{ pattern: /Claude-User/i, name: 'Claude-User', category: 'inference' },
 	{ pattern: /Perplexity-User/i, name: 'Perplexity-User', category: 'inference' },
 	{ pattern: /MistralAI-User/i, name: 'MistralAI-User', category: 'inference' },
 	{ pattern: /Amzn-User/i, name: 'Amzn-User', category: 'inference' },
 	{ pattern: /meta-externalfetcher/i, name: 'meta-externalfetcher', category: 'inference' },
 	{ pattern: /Google-Agent/i, name: 'Google-Agent', category: 'inference' },
+	{ pattern: /GoogleAgent-Mariner/i, name: 'GoogleAgent-Mariner', category: 'inference' },
 	{ pattern: /Gemini-Deep-Research/i, name: 'Gemini-Deep-Research', category: 'inference' },
 	{ pattern: /Google-NotebookLM/i, name: 'Google-NotebookLM', category: 'inference' },
 	{ pattern: /DuckAssistBot/i, name: 'DuckAssistBot', category: 'inference' },
 	{ pattern: /PhindBot/i, name: 'PhindBot', category: 'inference' },
+	{ pattern: /Cohere-Command/i, name: 'Cohere-Command', category: 'inference' },
+	{ pattern: /Devin\/[\d.]+/i, name: 'Devin', category: 'inference' },
 
 	// AI search indexers
 	{ pattern: /OAI-SearchBot/i, name: 'OAI-SearchBot', category: 'search' },
@@ -58,6 +68,7 @@ const AI_BOT_PATTERNS: Array<{ pattern: RegExp; name: string; category: BotCateg
 	{ pattern: /AzureAI-SearchBot/i, name: 'AzureAI-SearchBot', category: 'search' },
 	{ pattern: /meta-webindexer/i, name: 'meta-webindexer', category: 'search' },
 	{ pattern: /ExaBot/i, name: 'ExaBot', category: 'search' },
+	{ pattern: /Andibot/i, name: 'Andibot', category: 'search' },
 ];
 
 // Cloudflare verifiedBotCategory → OA bot_category

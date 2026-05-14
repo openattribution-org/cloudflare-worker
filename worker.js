@@ -13,7 +13,7 @@
 // Detection tiers:
 //   1. Cloudflare's verifiedBotCategory (all plans)
 //   2. Bot Management score (Enterprise) - skips verified non-AI bots and likely humans
-//   3. User-agent matching (fallback) - ~40 known AI bot UA patterns
+//   3. User-agent matching (fallback) - ~50 known AI bot UA patterns
 //
 // Not catchable via UA: OpenAI Operator (disguises as Chrome), xAI Grok (fake
 // Safari UA), DeepSeek (sometimes unidentified), Google AI training (uses the
@@ -40,18 +40,28 @@ const AI_BOT_PATTERNS = [
 	[/omgili/i, 'omgili', 'training'],
 	[/ImagesiftBot/i, 'ImagesiftBot', 'training'],
 	[/FirecrawlAgent/i, 'FirecrawlAgent', 'training'],
+	[/xAI-Bot/i, 'xAI-Bot', 'training'],
+	[/Google-CloudVertexBot/i, 'Google-CloudVertexBot', 'training'],
+	[/HuggingFace-Bot/i, 'HuggingFace-Bot', 'training'],
+	[/Brightbot/i, 'Brightbot', 'training'],
+	[/Webzio-Extended/i, 'Webzio-Extended', 'training'],
+	[/TerraCotta/i, 'TerraCotta', 'training'],
 	// Inference fetchers (user-triggered, real time)
 	[/ChatGPT-User/i, 'ChatGPT-User', 'inference'],
+	[/ChatGPT-Browser/i, 'ChatGPT-Browser', 'inference'],
 	[/Claude-User/i, 'Claude-User', 'inference'],
 	[/Perplexity-User/i, 'Perplexity-User', 'inference'],
 	[/MistralAI-User/i, 'MistralAI-User', 'inference'],
 	[/Amzn-User/i, 'Amzn-User', 'inference'],
 	[/meta-externalfetcher/i, 'meta-externalfetcher', 'inference'],
 	[/Google-Agent/i, 'Google-Agent', 'inference'],
+	[/GoogleAgent-Mariner/i, 'GoogleAgent-Mariner', 'inference'],
 	[/Gemini-Deep-Research/i, 'Gemini-Deep-Research', 'inference'],
 	[/Google-NotebookLM/i, 'Google-NotebookLM', 'inference'],
 	[/DuckAssistBot/i, 'DuckAssistBot', 'inference'],
 	[/PhindBot/i, 'PhindBot', 'inference'],
+	[/Cohere-Command/i, 'Cohere-Command', 'inference'],
+	[/Devin\/[\d.]+/i, 'Devin', 'inference'],
 	// AI search indexers
 	[/OAI-SearchBot/i, 'OAI-SearchBot', 'search'],
 	[/Claude-SearchBot/i, 'Claude-SearchBot', 'search'],
@@ -62,6 +72,7 @@ const AI_BOT_PATTERNS = [
 	[/AzureAI-SearchBot/i, 'AzureAI-SearchBot', 'search'],
 	[/meta-webindexer/i, 'meta-webindexer', 'search'],
 	[/ExaBot/i, 'ExaBot', 'search'],
+	[/Andibot/i, 'Andibot', 'search'],
 ];
 
 // Cloudflare's verifiedBotCategory -> OA bot_category. Available on every plan.
