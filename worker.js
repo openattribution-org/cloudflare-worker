@@ -151,7 +151,7 @@ export default {
 				timestamp: new Date().toISOString(),
 				content_url: request.url,
 				source_role: 'edge',
-				oa_telemetry_id: request.headers.get('OA-Telemetry-ID') || undefined,
+				content_telemetry_id: request.headers.get('Content-Telemetry-ID') || undefined,
 				data: {
 					user_agent: request.headers.get('user-agent'),
 					...(hit.name ? { bot_name: hit.name } : {}),
