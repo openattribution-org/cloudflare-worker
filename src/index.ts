@@ -95,6 +95,7 @@ export default {
 			const cacheHeader = response.headers.get('cf-cache-status');
 			const contentLength = response.headers.get('content-length');
 
+			const userAgent = request.headers.get('user-agent');
 			const event = {
 				id: crypto.randomUUID(),
 				type: 'content_retrieved',
@@ -103,7 +104,7 @@ export default {
 				source_role: 'edge',
 				content_telemetry_id: request.headers.get('Content-Telemetry-ID') || undefined,
 				data: {
-					user_agent: request.headers.get('user-agent'),
+					...(userAgent ? { user_agent: userAgent } : {}),
 					...(match.name ? { bot_name: match.name } : {}),
 					bot_category: match.category,
 					verified: match.verified,
@@ -125,7 +126,7 @@ export default {
 						'Content-Type': 'application/json',
 						'X-API-Key': env.OA_API_KEY,
 					},
-					body: JSON.stringify({ events: [event] }),
+					body: JSON.stringify({ schema_version: '0.1', events: [event] }),
 				}).catch(() => {
 					// Telemetry failures must not surface to the publisher's visitors
 				}),
