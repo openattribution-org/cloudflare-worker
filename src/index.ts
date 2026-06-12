@@ -71,7 +71,7 @@ const AI_BOT_PATTERNS: Array<{ pattern: RegExp; name: string; category: BotCateg
 	{ pattern: /Andibot/i, name: 'Andibot', category: 'search' },
 ];
 
-// Cloudflare verifiedBotCategory → OA bot_category
+// Cloudflare verifiedBotCategory → the standard's bot_category
 const CATEGORY_MAP: Record<string, BotCategory> = {
 	'AI Crawler': 'training',
 	'AI Assistant': 'inference',
@@ -79,6 +79,23 @@ const CATEGORY_MAP: Record<string, BotCategory> = {
 };
 
 const STATIC_EXT = /\.(css|js|jpg|jpeg|png|gif|svg|ico|woff2?|ttf|eot|map|webp|avif|mp4|webm)$/i;
+
+// Cloudflare uses placeholder codes that are not ISO 3166-1 alpha-2: 'T1' for
+// Tor exits and 'XX' for unknown. The telemetry schema requires ^[A-Z]{2}$,
+// so only emit country when it is a real code.
+function isoCountry(value: unknown): string | undefined {
+	if (typeof value !== 'string' || !/^[A-Z]{2}$/.test(value)) return undefined;
+	if (value === 'T1' || value === 'XX') return undefined;
+	return value;
+}
+
+// Content-Telemetry-ID correlates multi-observer events, so only forward it
+// when it is a well-formed UUID; otherwise treat it as absent.
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function telemetryId(value: string | null): string | undefined {
+	return value && UUID_PATTERN.test(value) ? value : undefined;
+}
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -96,13 +113,14 @@ export default {
 			const contentLength = response.headers.get('content-length');
 
 			const userAgent = request.headers.get('user-agent');
+			const country = isoCountry(cf?.country);
 			const event = {
 				id: crypto.randomUUID(),
 				type: 'content_retrieved',
 				timestamp: new Date().toISOString(),
 				content_url: request.url,
 				source_role: 'edge',
-				content_telemetry_id: request.headers.get('Content-Telemetry-ID') || undefined,
+				content_telemetry_id: telemetryId(request.headers.get('Content-Telemetry-ID')),
 				data: {
 					...(userAgent ? { user_agent: userAgent } : {}),
 					...(match.name ? { bot_name: match.name } : {}),
@@ -114,7 +132,7 @@ export default {
 					...(cacheHeader ? { cache_status: cacheHeader.toLowerCase() } : {}),
 					asn: cf?.asn,
 					asn_org: cf?.asOrganization,
-					country: cf?.country,
+					...(country ? { country } : {}),
 					...(match.ja4 ? { ja4: match.ja4 } : {}),
 				},
 			};
@@ -126,7 +144,7 @@ export default {
 						'Content-Type': 'application/json',
 						'X-API-Key': env.OA_API_KEY,
 					},
-					body: JSON.stringify({ schema_version: '0.1', events: [event] }),
+					body: JSON.stringify({ document_type: 'event_batch', schema_version: '0.1', events: [event] }),
 				}).catch(() => {
 					// Telemetry failures must not surface to the publisher's visitors
 				}),
