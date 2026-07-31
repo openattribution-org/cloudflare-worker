@@ -12,7 +12,8 @@ type BotCategory = 'training' | 'inference' | 'search';
 //
 // Google-Extended is a robots.txt-only token - Google always crawls with the
 // Googlebot UA regardless of purpose. Google AI training crawls are only
-// distinguishable via Cloudflare's verifiedBotCategory ("AI Crawler").
+// distinguishable via Cloudflare's verifiedBotCategory ("Training"; formerly
+// "AI Crawler").
 const AI_BOT_PATTERNS: Array<{ pattern: RegExp; name: string; category: BotCategory }> = [
 	// Training crawlers
 	{ pattern: /GPTBot/i, name: 'GPTBot', category: 'training' },
@@ -71,8 +72,13 @@ const AI_BOT_PATTERNS: Array<{ pattern: RegExp; name: string; category: BotCateg
 	{ pattern: /Andibot/i, name: 'Andibot', category: 'search' },
 ];
 
-// Cloudflare verifiedBotCategory → the standard's bot_category
+// Cloudflare verifiedBotCategory → the standard's bot_category. Cloudflare
+// renamed the AI categories on 1 July 2026; retain the old values for Workers
+// that still receive them during the transition.
 const CATEGORY_MAP: Record<string, BotCategory> = {
+	Training: 'training',
+	Agent: 'inference',
+	Search: 'search',
 	'AI Crawler': 'training',
 	'AI Assistant': 'inference',
 	'AI Search': 'search',

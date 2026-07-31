@@ -75,8 +75,13 @@ const AI_BOT_PATTERNS = [
 	[/Andibot/i, 'Andibot', 'search'],
 ];
 
-// Cloudflare's verifiedBotCategory -> the standard's bot_category. Available on every plan.
+// Cloudflare's verifiedBotCategory -> the standard's bot_category. Cloudflare
+// renamed the AI categories on 1 July 2026; retain the old values for Workers
+// that still receive them during the transition.
 const CF_CATEGORY = {
+	Training: 'training',
+	Agent: 'inference',
+	Search: 'search',
 	'AI Crawler': 'training',
 	'AI Assistant': 'inference',
 	'AI Search': 'search',
