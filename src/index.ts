@@ -120,6 +120,9 @@ export default {
 
 			const userAgent = request.headers.get('user-agent');
 			const country = isoCountry(cf?.country);
+			// Content Telemetry v1 edge enrichment profile (spec 6.2). Network
+			// fields describe the request path, never the client: v1 withdrew
+			// ip_hash (spec 9.1), so no IP-derived value may be added here.
 			const event = {
 				id: crypto.randomUUID(),
 				type: 'content_retrieved',

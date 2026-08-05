@@ -61,7 +61,7 @@ When an AI bot is detected, the worker sends a `content_retrieved` event contain
 - **Response:** HTTP status, response size (Content-Length), cache status
 - **Network:** ASN, ASN organisation, country code, JA4 TLS fingerprint (Enterprise only)
 
-No visitor IP addresses, cookies, or request bodies are sent. Static resources (CSS, JS, images, fonts) are skipped entirely.
+The event follows the Content Telemetry v1 edge profile (spec section 6.2). Network fields describe the request path, not the client: no visitor IP addresses (raw or hashed - v1 withdrew the `ip_hash` field, spec 9.1), cookies, or request bodies are sent. Static resources (CSS, JS, images, fonts) are skipped entirely.
 
 ## Limitations
 
