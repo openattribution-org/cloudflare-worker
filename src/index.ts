@@ -3,7 +3,7 @@ interface Env {
 	OA_API_KEY: string;
 }
 
-type BotCategory = 'training' | 'inference' | 'search';
+type AccessPurpose = 'training' | 'inference' | 'search' | 'advertising' | (string & {});
 
 // Known AI bot user agents - fallback when Cloudflare's verifiedBotCategory is unavailable.
 //
@@ -14,7 +14,7 @@ type BotCategory = 'training' | 'inference' | 'search';
 // Googlebot UA regardless of purpose. Google AI training crawls are only
 // distinguishable via Cloudflare's verifiedBotCategory ("Training"; formerly
 // "AI Crawler").
-const AI_BOT_PATTERNS: Array<{ pattern: RegExp; name: string; category: BotCategory }> = [
+const AI_BOT_PATTERNS: Array<{ pattern: RegExp; name: string; category: AccessPurpose }> = [
 	// Training crawlers
 	{ pattern: /GPTBot/i, name: 'GPTBot', category: 'training' },
 	{ pattern: /ClaudeBot/i, name: 'ClaudeBot', category: 'training' },
@@ -72,10 +72,11 @@ const AI_BOT_PATTERNS: Array<{ pattern: RegExp; name: string; category: BotCateg
 	{ pattern: /Andibot/i, name: 'Andibot', category: 'search' },
 ];
 
-// Cloudflare verifiedBotCategory → the standard's bot_category. Cloudflare
+// Cloudflare verifiedBotCategory → the standard's access purpose (spec 6.2,
+// informative mapping in Annex C). Cloudflare
 // renamed the AI categories on 1 July 2026; retain the old values for Workers
 // that still receive them during the transition.
-const CATEGORY_MAP: Record<string, BotCategory> = {
+const CATEGORY_MAP: Record<string, AccessPurpose> = {
 	Training: 'training',
 	Agent: 'inference',
 	Search: 'search',
@@ -112,6 +113,12 @@ export default {
 
 		const response = await fetch(request);
 
+		// A 304 revalidation returns no new representation and is not a new
+		// retrieval occurrence (spec 4.3, stage 1).
+		if (response.status === 304) {
+			return response;
+		}
+
 		const match = classify(request);
 		if (match) {
 			const cf = (request as any).cf;
@@ -133,7 +140,7 @@ export default {
 				data: {
 					...(userAgent ? { user_agent: userAgent } : {}),
 					...(match.name ? { bot_name: match.name } : {}),
-					bot_category: match.category,
+					purpose: match.category,
 					verified: match.verified,
 					detection: match.detection,
 					response_status: response.status,
@@ -153,7 +160,7 @@ export default {
 						'Content-Type': 'application/json',
 						'X-API-Key': env.OA_API_KEY,
 					},
-					body: JSON.stringify({ document_type: 'event_batch', schema_version: '0.1', events: [event] }),
+					body: JSON.stringify({ document_type: 'event_batch', schema_version: '1.0', events: [event] }),
 				}).catch(() => {
 					// Telemetry failures must not surface to the publisher's visitors
 				}),
@@ -166,13 +173,13 @@ export default {
 
 interface Classification {
 	name: string | null;
-	category: BotCategory;
+	category: AccessPurpose;
 	verified: boolean;
 	detection: 'bot_management' | 'user_agent';
 	ja4?: string;
 }
 
-function matchUserAgent(ua: string): { name: string; category: BotCategory } | null {
+function matchUserAgent(ua: string): { name: string; category: AccessPurpose } | null {
 	for (const bot of AI_BOT_PATTERNS) {
 		if (bot.pattern.test(ua)) return { name: bot.name, category: bot.category };
 	}

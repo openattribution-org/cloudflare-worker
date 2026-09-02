@@ -27,7 +27,7 @@ Skips static resources, passes the request to origin immediately, then classifie
 
 If classified as an AI bot, fires a `content_retrieved` event to the OA telemetry endpoint via `ctx.waitUntil`. Telemetry failures are silently swallowed - never surfaces errors to the publisher's visitors.
 
-Bot categories: `training`, `inference`, `search`.
+Access purposes (`purpose`, open enum): `training`, `inference`, `search`, `advertising`.
 
 ## Configuration
 

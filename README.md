@@ -57,7 +57,7 @@ in sync; change both together.
 When an AI bot is detected, the worker sends a `content_retrieved` event containing:
 
 - **Request:** URL, user-agent header, Content-Telemetry-ID (if present)
-- **Classification:** bot category (`training`, `inference`, `search`), whether verified, detection method
+- **Classification:** access purpose (`training`, `inference`, `search`, `advertising` - an open enum), whether verified, detection method
 - **Response:** HTTP status, response size (Content-Length), cache status
 - **Network:** ASN, ASN organisation, country code, JA4 TLS fingerprint (Enterprise only)
 

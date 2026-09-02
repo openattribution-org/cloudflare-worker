@@ -75,7 +75,8 @@ const AI_BOT_PATTERNS = [
 	[/Andibot/i, 'Andibot', 'search'],
 ];
 
-// Cloudflare's verifiedBotCategory -> the standard's bot_category. Cloudflare
+// Cloudflare's verifiedBotCategory -> the standard's access purpose (spec 6.2,
+// informative mapping in Annex C). Cloudflare
 // renamed the AI categories on 1 July 2026; retain the old values for Workers
 // that still receive them during the transition.
 const CF_CATEGORY = {
@@ -161,6 +162,12 @@ export default {
 
 		const response = await fetch(request);
 
+		// A 304 revalidation returns no new representation and is not a new
+		// retrieval occurrence (spec 4.3, stage 1).
+		if (response.status === 304) {
+			return response;
+		}
+
 		const hit = classify(request);
 		if (hit) {
 			const cf = request.cf || {};
@@ -182,7 +189,7 @@ export default {
 				data: {
 					...(userAgent ? { user_agent: userAgent } : {}),
 					...(hit.name ? { bot_name: hit.name } : {}),
-					bot_category: hit.category,
+					purpose: hit.category,
 					verified: hit.verified,
 					detection: hit.detection,
 					response_status: response.status,
@@ -204,7 +211,7 @@ export default {
 						'Content-Type': 'application/json',
 						'X-API-Key': env.OA_API_KEY,
 					},
-					body: JSON.stringify({ document_type: 'event_batch', schema_version: '0.1', events: [event] }),
+					body: JSON.stringify({ document_type: 'event_batch', schema_version: '1.0', events: [event] }),
 				}).catch(() => {}),
 			);
 		}
