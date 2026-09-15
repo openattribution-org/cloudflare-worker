@@ -19,7 +19,7 @@ TypeScript, Cloudflare Workers, wrangler v4.
 
 ## How it works
 
-Skips static resources, passes the request to origin immediately, then classifies in the background using three tiers:
+Skips non-`GET` requests and static resources, passes the request to origin, and only classifies `2xx` responses (redirects, 304s and errors are not retrieval occurrences, spec 4.3). Classification uses three tiers:
 
 1. **verifiedBotCategory** (all plans) - Cloudflare's verified bot classification
 2. **Bot Management score** (Enterprise) - filters non-AI bots and likely humans, low-score unverified fall through to UA
@@ -31,7 +31,7 @@ Access purposes (`purpose`, open enum): `training`, `inference`, `search`, `adve
 
 ## Configuration
 
-- `wrangler.toml` - routes, zone ID, `OA_TELEMETRY_ENDPOINT` env var
+- `wrangler.toml` - routes, zone ID, `OA_TELEMETRY_ENDPOINT` env var, optional `OA_MANIFEST_REF` (sent as the envelope `manifest_ref`)
 - `wrangler.example.toml` - template without zone-specific config
 - `OA_API_KEY` - set via `npx wrangler secret put OA_API_KEY` (never in toml). A content-owner key (`oat_pub_...`) with `telemetry:write` scope for the publisher's verified domain - the worker reports events about that site, so it does not use a platform (`oat_pk_...`) key.
 

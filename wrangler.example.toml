@@ -4,6 +4,8 @@ compatibility_date = "2025-03-01"
 
 [vars]
 OA_TELEMETRY_ENDPOINT = "https://telemetry.openattribution.org/events"
+# Optional: your manifest, sent as manifest_ref on every event batch
+# OA_MANIFEST_REF = "https://example.com/.well-known/content-telemetry.json"
 
 # OA_API_KEY is a secret - set via:
 #   npx wrangler secret put OA_API_KEY

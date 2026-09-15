@@ -1,6 +1,7 @@
 interface Env {
 	OA_TELEMETRY_ENDPOINT: string;
 	OA_API_KEY: string;
+	OA_MANIFEST_REF?: string;
 }
 
 type AccessPurpose = 'training' | 'inference' | 'search' | 'advertising' | (string & {});
@@ -104,18 +105,41 @@ function telemetryId(value: string | null): string | undefined {
 	return value && UUID_PATTERN.test(value) ? value : undefined;
 }
 
+// Emitters SHOULD report the canonical URL so observers of one retrieval
+// correlate (spec 4.5). The edge sees the response headers, not the HTML, so
+// only an HTTP `Link: <...>; rel="canonical"` header is honoured. A canonical
+// on another host (syndicated content) is ignored: the API key covers this
+// site's domain, and the consumer resolves the owner from content_url.
+function canonicalUrl(link: string | null, requestUrl: string): string {
+	if (!link) return requestUrl;
+	for (const [, target, params] of link.matchAll(/<([^>]*)>([^,<]*)/g)) {
+		if (!/;\s*rel\s*=\s*"?(?:[^";]*\s)?canonical(?:\s[^";]*)?"?\s*(?:;|$)/i.test(params)) continue;
+		try {
+			const url = new URL(target, requestUrl);
+			const sameHost = url.hostname === new URL(requestUrl).hostname;
+			if (sameHost && (url.protocol === 'https:' || url.protocol === 'http:')) return url.href;
+		} catch {
+			// Malformed target - fall back to the URL as fetched
+		}
+	}
+	return requestUrl;
+}
+
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-		// Skip static resources early
-		if (STATIC_EXT.test(new URL(request.url).pathname)) {
+		// Only a GET transfers a representation; HEAD, OPTIONS and writes are
+		// not retrievals (spec 4.3, stage 1). Skip static resources too.
+		if (request.method !== 'GET' || STATIC_EXT.test(new URL(request.url).pathname)) {
 			return fetch(request);
 		}
 
 		const response = await fetch(request);
 
-		// A 304 revalidation returns no new representation and is not a new
-		// retrieval occurrence (spec 4.3, stage 1).
-		if (response.status === 304) {
+		// One retrieval occurrence is one completed fetch of a representation
+		// (spec 4.3, stage 1). A redirect is reported once, at the 2xx it
+		// resolves to; a 304 is not a new occurrence; an error delivers no
+		// representation.
+		if (response.status < 200 || response.status >= 300) {
 			return response;
 		}
 
@@ -127,6 +151,7 @@ export default {
 
 			const userAgent = request.headers.get('user-agent');
 			const country = isoCountry(cf?.country);
+			const contentUrl = canonicalUrl(response.headers.get('link'), request.url);
 			// Content Telemetry v1 edge enrichment profile (spec 6.2). Network
 			// fields describe the request path, never the client: v1 withdrew
 			// ip_hash (spec 9.1), so no IP-derived value may be added here.
@@ -134,10 +159,14 @@ export default {
 				id: crypto.randomUUID(),
 				type: 'content_retrieved',
 				timestamp: new Date().toISOString(),
-				content_url: request.url,
+				content_url: contentUrl,
 				source_role: 'edge',
 				content_telemetry_id: telemetryId(request.headers.get('Content-Telemetry-ID')),
 				data: {
+					// Extension field: the URL as fetched, kept when it differs from
+					// the canonical URL so a consumer can still match an agent that
+					// reports the fetched URL.
+					...(contentUrl !== request.url ? { request_url: request.url } : {}),
 					...(userAgent ? { user_agent: userAgent } : {}),
 					...(match.name ? { bot_name: match.name } : {}),
 					purpose: match.category,
@@ -160,7 +189,13 @@ export default {
 						'Content-Type': 'application/json',
 						'X-API-Key': env.OA_API_KEY,
 					},
-					body: JSON.stringify({ document_type: 'event_batch', schema_version: '1.0', events: [event] }),
+					body: JSON.stringify({
+						document_type: 'event_batch',
+						schema_version: '1.0',
+						// Names the manifest the content owner reports under (spec 7.1)
+						...(env.OA_MANIFEST_REF ? { manifest_ref: env.OA_MANIFEST_REF } : {}),
+						events: [event],
+					}),
 				}).catch(() => {
 					// Telemetry failures must not surface to the publisher's visitors
 				}),

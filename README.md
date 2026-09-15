@@ -34,7 +34,7 @@ npm run deploy
 `src/index.ts`, in plain JavaScript). If you don't want to use `wrangler`:
 
 1. Cloudflare dashboard → **Workers & Pages** → **Create application** → **Create Worker** → **Deploy** the placeholder, then **Edit code** and paste `worker.js`.
-2. The Worker's **Settings → Variables and Secrets**: add `OA_TELEMETRY_ENDPOINT` (text, `https://telemetry.openattribution.org/events`) and `OA_API_KEY` (secret, your `oat_pub_` key).
+2. The Worker's **Settings → Variables and Secrets**: add `OA_TELEMETRY_ENDPOINT` (text, `https://telemetry.openattribution.org/events`) and `OA_API_KEY` (secret, your `oat_pub_` key). Optionally add `OA_MANIFEST_REF` (text) if you publish a manifest.
 3. The Worker's **Settings → Domains & Routes**: add `yoursite.com/*` and `*.yoursite.com/*`.
 
 There's a full click-by-click walkthrough - including putting a free Cloudflare
@@ -50,18 +50,34 @@ in sync; change both together.
 |----------|-------|-------------|
 | `OA_TELEMETRY_ENDPOINT` | `wrangler.toml` `[vars]` | OA API endpoint (default provided) |
 | `OA_API_KEY` | wrangler secret | Content-owner key (`oat_pub_...`) with `telemetry:write` scope for your domain |
+| `OA_MANIFEST_REF` | `wrangler.toml` `[vars]` (optional) | URL of your `/.well-known/content-telemetry.json` manifest, sent as `manifest_ref` (spec 7.1) |
 | `routes` | `wrangler.toml` | Which domains/paths the worker runs on |
 
 ## What data is sent
 
-When an AI bot is detected, the worker sends a `content_retrieved` event containing:
+When an AI bot completes a `GET` with a `2xx` response, the worker sends a `content_retrieved` event containing:
 
-- **Request:** URL, user-agent header, Content-Telemetry-ID (if present)
+- **Request:** URL (canonical URL from a `Link: rel="canonical"` response header when present, with the fetched URL as `request_url`), user-agent header, Content-Telemetry-ID (if present)
 - **Classification:** access purpose (`training`, `inference`, `search`, `advertising` - an open enum), whether verified, detection method
 - **Response:** HTTP status, response size (Content-Length), cache status
 - **Network:** ASN, ASN organisation, country code, JA4 TLS fingerprint (Enterprise only)
 
 The event follows the Content Telemetry v1 edge profile (spec section 6.2). Network fields describe the request path, not the client: no visitor IP addresses (raw or hashed - v1 withdrew the `ip_hash` field, spec 9.1), cookies, or request bodies are sent. Static resources (CSS, JS, images, fonts) are skipped entirely.
+
+## What counts as a retrieval
+
+The worker follows the v1 occurrence boundary (spec 4.3): one event per completed fetch of a content representation.
+
+- **Reported:** `GET` requests answered with `2xx`
+- **Not reported:** redirects (the chain is reported once, at the `2xx` it resolves to), `304` revalidations, `4xx`/`5xx` responses, and non-`GET` methods such as `HEAD`
+
+## Coverage
+
+Coverage is not `complete` (spec 5.7.6), so don't declare it as such in a manifest or in terms:
+
+- Static files are out of scope by file extension, including images and video
+- Detection misses bots that disguise their user-agent (see Limitations)
+- A telemetry POST that fails is dropped, not retried
 
 ## Limitations
 
